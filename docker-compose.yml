@@ -8,8 +8,6 @@ services:
       dockerfile: Dockerfile
     image: laravel-app
     container_name: app
-    restart: unless-stopped
-    tty: true
     environment:
       SERVICE_NAME: app
       SERVICE_TAGS: dev
@@ -22,10 +20,8 @@ services:
 
   #Nginx Service
   webserver:
-    image: nginx:alpine
+    image: nginx:1.15.10
     container_name: webserver
-    restart: unless-stopped
-    tty: true
     ports:
       - "81:80"
       - "443:443"
@@ -39,13 +35,11 @@ services:
   db:
     image: mysql:5.7.22
     container_name: db
-    restart: unless-stopped
-    tty: true
     ports:
       - "3307:3306"
     environment:
       MYSQL_DATABASE: laravel
-      MYSQL_ROOT_PASSWORD: ngothuyhoa
+      MYSQL_ROOT_PASSWORD: your_mysql_root_password
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
     volumes:
