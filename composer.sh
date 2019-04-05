@@ -3,10 +3,10 @@
 composer install
 
 # Check if .env is existed?
-if [[ -e .env ]]; then
-	rm .env
+if [[ ! -e .env ]]; then
 	cp .env.example .env
+
+	# Generate key
+	php artisan key:generate
 fi
 
-# Generate key
-php artisan key:generate
