@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit;
+namespace Tests\Unit\PhpUnit;
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -18,8 +18,8 @@ class ExceptionTest extends TestCase
         $this->assertTrue(true);
     }
 
-    public function testException()
-    {
-        $this->expectException(InvalidArgumentException::class);
-    }
+    // public function testException()
+    // {
+    //     $this->expectException(InvalidArgumentException::class);
+    // }
 }
