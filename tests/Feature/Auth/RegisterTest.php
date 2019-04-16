@@ -7,8 +7,10 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\User;
 
+
 class RegisterTest extends TestCase
 {
+    use RefreshDatabase;
     /**
      * A basic feature test example.
      *
@@ -31,9 +33,10 @@ class RegisterTest extends TestCase
             'password_confirmation' => '12345678'
         ]);
 
+
         $response->assertStatus(302);
         $response->assertRedirect('/home');
 
-        //$this->assertAuthenticated();
+        $this->assertAuthenticated();
     }
 }
