@@ -10,15 +10,19 @@ use App\Contracts\Repositories\PostRepository;
 use App\Post;
 use App\Http\Controllers\PostController;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\ParameterBag;
+use Illuminate\Http\RedirectResponse;
 use Faker\Factory as Faker;
 
 class PostControllerTest extends TestCase
 {
-    //use RefreshDatabase;
+    use RefreshDatabase;
     /**
      * @var \Mockery\Mock|Contracts\Repositories\PostRepository
      */
+
 	protected $postMock;
+
     /**
      * A basic unit test example.
      *
@@ -29,30 +33,11 @@ class PostControllerTest extends TestCase
         $this->assertTrue(true);
     }
 
-    /** @test */
-    public function it_can_create_a_post()
-    {
-        $faker = Faker::create();
-        $data = [
-            'category_id' => $faker->in,
-            'title' => $faker->word,
-            'link' => $faker->url,
-            'src' => $faker->url,
-        ];
-      
-        $carouselRepo = new CarouselRepository(new Carousel);
-        $carousel = $carouselRepo->createCarousel($data);
-      
-        $this->assertInstanceOf(Carousel::class, $carousel);
-        $this->assertEquals($data['title'], $carousel->title);
-        $this->assertEquals($data['link'], $carousel->link);
-        $this->assertEquals($data['src'], $carousel->src);
-    }
-
     public function setup(): void {
 
     	$this->afterApplicationCreated(function () {
-            $this->postMock = m::mock($this->app->make(PostRepository::class));
+
+            $this->postMock = m::mock($this->app->make(PostRepository::class))->makePartial();
         });
 
         parent::setUp();
@@ -60,24 +45,77 @@ class PostControllerTest extends TestCase
 
     public function test_index_return_view() {
 
+        //dd($this->postMock);
     	$controller = new PostController($this->postMock);
     	$request = new Request();
         $request->headers->set('content-type', 'application/json');
         $request->query->set('page', 3);
-        $posts = factory(Post::class, 5)->create();
+        $posts = factory(Post::class, 15)->create();
 
-
-        // return view
-        $view = $controller->index($request);
-        //dump($view->getData());
-        //dump(['posts' => $posts]);
-        $this->assertEquals('post.list', $view->getName());
-        //$this->assertArraySubset(['posts' => $posts], $view->getData());
-
-        $this->postMock->shouldReceive('paginate')
-            ->once() // method is called once
+        $this->postMock
+            ->shouldReceive('paginate')
+            ->once()
             ->andReturn($posts);
+        
+        $view = $controller->index($request);
+        $this->assertEquals('post.list', $view->getName());
+        //assertArraySubset: Asserts that an array has a specified subset.
+        $this->assertArraySubset(['posts' => $posts], $view->getData());
+        //assertArrayHasKey: Asserts that an array has a specified key (use with compact in controller)
+        $this->assertArrayHasKey('posts', $view->getData());
+    
+    }
+
+    public function test_it_stores_new_post() {
+
+        $controller = new PostController($this->postMock);
+        $data = [
+            'title' => 'New City',
+            'content' => 'Qui fugiat natus incidunt animi magni consequatur',
+            'view' => 8,
+            'vote' => 9,
+            'status' => 1,
+            'category_id' => 1,
+            'slug' => 'Non cum dolorem iure deserunt doloribus consequuntur similiqueee.',
+            'updated_at' => '2019-04-16 07:45:03',
+            'created_at' => '2019-04-16 07:45:03'
+        ];
+
+        $request = new Request();
+        $request->headers->set('content-type', 'application/json');
+        //$request->setJson(new ParameterBag($data));
+        $view = $controller->store($request);
+
+        $this->assertEquals('post.list', $view->getName());
+
+        $posts =$this->postMock->store($data);
+
+        $this->assertInstanceOf(Post::class, $posts);
+        $this->assertEquals($data['title'], $posts->title);
+        $this->assertEquals($data['content'], $posts->content);
+        $this->assertEquals($data['view'], $posts->view);
+        $this->assertEquals($data['vote'], $posts->vote);
+        $this->assertEquals($data['status'], $posts->status);
+        $this->assertEquals($data['slug'], $posts->slug);
 
     }
 
+     public function test_it_can_update_the_post()
+    {
+        $posts = factory(Post::class)->create();
+        
+        $data = [
+            'title' => 'Laravel 1',
+            'view' => 100,
+            'vote' => 100,
+        ];
+        
+        $update = $this->postMock->update($posts->id, $data);
+        $post = $this->postMock->findOrFail($posts->id);
+        
+        $this->assertTrue($update);
+        $this->assertEquals($data['title'], $post->title);
+        $this->assertEquals($data['view'], $post->view);
+        $this->assertEquals($data['vote'], $post->vote);
+    }
 }

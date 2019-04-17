@@ -21,4 +21,10 @@ class PostController extends Controller
        
    		return view('post.list', compact('posts'));
     }
+
+    public function store(Request $request)
+    {
+        
+        return view('post.list');
+    }
 }

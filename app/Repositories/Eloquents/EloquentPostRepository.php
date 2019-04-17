@@ -21,5 +21,9 @@ class EloquentPostRepository extends EloquentBaseRepository implements PostRepos
         return $this->model->findOrFail($id);
     }
 
+    public function countView() {
+        return 1;
+    }
+
     
 }
