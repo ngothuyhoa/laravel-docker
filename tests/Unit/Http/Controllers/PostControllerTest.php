@@ -28,6 +28,7 @@ class PostControllerTest extends TestCase
      *
      * @return void
      */
+    
     public function testExample()
     {
         $this->assertTrue(true);
@@ -35,23 +36,42 @@ class PostControllerTest extends TestCase
 
     public function setup(): void {
 
-    	$this->afterApplicationCreated(function () {
-
+        $this->afterApplicationCreated(function () {
             $this->postMock = m::mock($this->app->make(PostRepository::class))->makePartial();
         });
-
         parent::setUp();
     }
 
+
     public function test_index_return_view() {
 
-        //dd($this->postMock);
-    	$controller = new PostController($this->postMock);
     	$request = new Request();
         $request->headers->set('content-type', 'application/json');
         $request->query->set('page', 3);
         $posts = factory(Post::class, 15)->create();
 
+        $mock = $this->mock(PostRepository::class, function ($mock) use ($posts){
+            $mock->shouldReceive('paginate')->once()->with()->andReturn($posts);
+
+        });
+
+        $controller = new PostController($mock);
+        
+        $view = $controller->index($request);
+        $this->assertEquals('post.list', $view->getName());
+        //assertArraySubset: Asserts that an array has a specified subset.
+        $this->assertArraySubset(['posts' => $posts], $view->getData());
+        //assertArrayHasKey: Asserts that an array has a specified key (use with compact in controller)
+        $this->assertArrayHasKey('posts', $view->getData()); 
+    }
+
+    /*public function test_index_return_view() {
+        //dd($this->postMock);
+        $controller = new PostController($this->postMock);
+        $request = new Request();
+        $request->headers->set('content-type', 'application/json');
+        $request->query->set('page', 3);
+        $posts = factory(Post::class, 15)->create();
         $this->postMock
             ->shouldReceive('paginate')
             ->once()
@@ -64,7 +84,7 @@ class PostControllerTest extends TestCase
         //assertArrayHasKey: Asserts that an array has a specified key (use with compact in controller)
         $this->assertArrayHasKey('posts', $view->getData());
     
-    }
+    }*/
 
     public function test_it_stores_new_post() {
 
@@ -80,16 +100,12 @@ class PostControllerTest extends TestCase
             'updated_at' => '2019-04-16 07:45:03',
             'created_at' => '2019-04-16 07:45:03'
         ];
-
         $request = new Request();
         $request->headers->set('content-type', 'application/json');
         //$request->setJson(new ParameterBag($data));
         $view = $controller->store($request);
-
         $this->assertEquals('post.list', $view->getName());
-
         $posts =$this->postMock->store($data);
-
         $this->assertInstanceOf(Post::class, $posts);
         $this->assertEquals($data['title'], $posts->title);
         $this->assertEquals($data['content'], $posts->content);
